@@ -1,8 +1,9 @@
 import csv
+import datetime
 import os
 from xml.etree.ElementTree import iterparse
 
-WORKOUT_RECORD_KEYS = [
+_OUTPUT_COLUMNS = [
     'workoutActivityType',
     'duration',
     'durationUnit',
@@ -15,7 +16,13 @@ WORKOUT_RECORD_KEYS = [
     'creationDate',
     'startDate',
     'endDate',
+    'HeartRate_unit',
+    'HeartRate_average',
+    'HeartRate_min',
+    'HeartRate_max',
 ]
+
+_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %z'
 
 
 def read_workout_and_heart_rate_records(f):
@@ -25,7 +32,35 @@ def read_workout_and_heart_rate_records(f):
 
 
 def enrich_records_with_heart_rate(records):
-    return records
+    workouts = []
+    heart_rates = {}
+
+    for record in records:
+        if record.get('workoutActivityType'):
+            workouts.append(record)
+
+        if record.get('type') == 'HKQuantityTypeIdentifierHeartRate':
+            dt = datetime.datetime.strptime(record.get('startDate'), _DATETIME_FORMAT)
+            heart_rates[dt] = record
+
+    for workout in workouts:
+        matching_heart_rates = []
+        workout_start = datetime.datetime.strptime(workout['startDate'], _DATETIME_FORMAT)
+        workout_end = datetime.datetime.strptime(workout['endDate'], _DATETIME_FORMAT)
+
+        for heart_rate_dt in heart_rates:
+            if workout_start < heart_rate_dt < workout_end:
+                matching_heart_rates.append(heart_rates[heart_rate_dt])
+
+        if matching_heart_rates:
+            workout['HeartRate_unit'] = 'count/min'
+            heart_rate_values = [int(heart_rate['value']) for heart_rate in matching_heart_rates]
+
+            workout['HeartRate_average'] = str(int(sum(heart_rate_values) / len(heart_rate_values)))
+            workout['HeartRate_min'] = str(min(heart_rate_values))
+            workout['HeartRate_max'] = str(max(heart_rate_values))
+
+        yield workout
 
 
 def write_enriched_records_to_csv(records, f):
@@ -34,7 +69,7 @@ def write_enriched_records_to_csv(records, f):
     except StopIteration:
         return
 
-    writer = csv.DictWriter(f, fieldnames=WORKOUT_RECORD_KEYS, extrasaction='ignore')
+    writer = csv.DictWriter(f, fieldnames=_OUTPUT_COLUMNS, extrasaction='ignore')
     writer.writeheader()
     writer.writerow(first_record)
 

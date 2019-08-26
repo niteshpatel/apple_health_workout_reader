@@ -118,7 +118,7 @@ class TestReader(unittest.TestCase):
             [workout_record, heart_rate_record],
         )
 
-    def test_enrich_records_with_no_matching_heart_rate_data_does_nothing(self):
+    def test_enrich_records_with_no_matching_heart_rate_data_does_not_enrich_workout(self):
         # arrange
         records = [
             {
@@ -151,7 +151,140 @@ class TestReader(unittest.TestCase):
         enriched = reader.enrich_records_with_heart_rate(records)
 
         # assert
-        self.assertEqual(list(records), list(enriched))
+        workout_record = records[0]
+        self.assertEqual([workout_record], list(enriched))
+
+    def test_enrich_records_with_one_matching_heart_rate_data_enriches_workout(self):
+        # arrange
+        records = [
+            {
+                'workoutActivityType': 'HKWorkoutActivityTypeRunning',
+                'duration': '15.71666666666667',
+                'durationUnit': 'min',
+                'totalDistance': '1.951105543625229',
+                'totalDistanceUnit': 'mi',
+                'totalEnergyBurned': '184',
+                'totalEnergyBurnedUnit': 'kcal',
+                'sourceName': 'Polar Beat',
+                'sourceVersion': '316',
+                'creationDate': '2018-10-02 07:58:33 +0100',
+                'startDate': '2018-10-02 06:54:12 +0100',
+                'endDate': '2018-10-02 07:09:55 +0100',
+            },
+            {
+                'type': 'HKQuantityTypeIdentifierHeartRate',
+                'sourceName': 'Nitesh\'s iPhone',
+                'sourceVersion': '13.0',
+                'unit': 'count/min',
+                'creationDate': '2018-10-02 07:00:00 +0100',
+                'startDate': '2018-10-02 07:00:00 +0100',
+                'endDate': '2018-10-02 07:00:00 +0100',
+                'value': '129',
+            }
+        ]
+
+        # act
+        enriched = reader.enrich_records_with_heart_rate(records)
+
+        # assert
+        expected = [
+            {
+                'workoutActivityType': 'HKWorkoutActivityTypeRunning',
+                'duration': '15.71666666666667',
+                'durationUnit': 'min',
+                'totalDistance': '1.951105543625229',
+                'totalDistanceUnit': 'mi',
+                'totalEnergyBurned': '184',
+                'totalEnergyBurnedUnit': 'kcal',
+                'sourceName': 'Polar Beat',
+                'sourceVersion': '316',
+                'creationDate': '2018-10-02 07:58:33 +0100',
+                'startDate': '2018-10-02 06:54:12 +0100',
+                'endDate': '2018-10-02 07:09:55 +0100',
+                'HeartRate_unit': 'count/min',
+                'HeartRate_average': '129',
+                'HeartRate_min': '129',
+                'HeartRate_max': '129',
+            }
+        ]
+
+        self.assertEqual(expected, list(enriched))
+
+    def test_enrich_records_with_two_matching_heart_rate_data_enriches_workout(self):
+        # arrange
+        records = [
+            {
+                'workoutActivityType': 'HKWorkoutActivityTypeRunning',
+                'duration': '15.71666666666667',
+                'durationUnit': 'min',
+                'totalDistance': '1.951105543625229',
+                'totalDistanceUnit': 'mi',
+                'totalEnergyBurned': '184',
+                'totalEnergyBurnedUnit': 'kcal',
+                'sourceName': 'Polar Beat',
+                'sourceVersion': '316',
+                'creationDate': '2018-10-02 07:58:33 +0100',
+                'startDate': '2018-10-02 06:54:12 +0100',
+                'endDate': '2018-10-02 07:09:55 +0100',
+            },
+            {
+                'type': 'HKQuantityTypeIdentifierHeartRate',
+                'sourceName': 'Nitesh\'s iPhone',
+                'sourceVersion': '13.0',
+                'unit': 'count/min',
+                'creationDate': '2018-10-02 07:00:00 +0100',
+                'startDate': '2018-10-02 07:00:00 +0100',
+                'endDate': '2018-10-02 07:00:00 +0100',
+                'value': '129',
+            },
+            {
+                'type': 'HKQuantityTypeIdentifierHeartRate',
+                'sourceName': 'Nitesh\'s iPhone',
+                'sourceVersion': '13.0',
+                'unit': 'count/min',
+                'creationDate': '2018-10-02 07:05:00 +0100',
+                'startDate': '2018-10-02 07:05:00 +0100',
+                'endDate': '2018-10-02 07:05:00 +0100',
+                'value': '197',
+            },
+            {
+                'type': 'HKQuantityTypeIdentifierHeartRate',
+                'sourceName': 'Nitesh\'s iPhone',
+                'sourceVersion': '13.0',
+                'unit': 'count/min',
+                'creationDate': '2018-10-03 12:00:00 +0100',
+                'startDate': '2018-10-03 12:00:00 +0100',
+                'endDate': '2018-10-03 12:00:00 +0100',
+                'value': '150',
+            }
+        ]
+
+        # act
+        enriched = reader.enrich_records_with_heart_rate(records)
+
+        # assert
+        expected = [
+            {
+                'workoutActivityType': 'HKWorkoutActivityTypeRunning',
+                'duration': '15.71666666666667',
+                'durationUnit': 'min',
+                'totalDistance': '1.951105543625229',
+                'totalDistanceUnit': 'mi',
+                'totalEnergyBurned': '184',
+                'totalEnergyBurnedUnit': 'kcal',
+                'sourceName': 'Polar Beat',
+                'sourceVersion': '316',
+                'creationDate': '2018-10-02 07:58:33 +0100',
+                'startDate': '2018-10-02 06:54:12 +0100',
+                'endDate': '2018-10-02 07:09:55 +0100',
+                'HeartRate_unit': 'count/min',
+                'HeartRate_average': '163',
+                'HeartRate_min': '129',
+                'HeartRate_max': '197',
+            }
+        ]
+
+        self.assertEqual(expected, list(enriched))
 
     def test_convert_no_records_to_csv(self):
         # arrange
