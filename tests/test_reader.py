@@ -228,6 +228,20 @@ class TestReader(unittest.TestCase):
                 'endDate': '2018-10-02 07:09:55 +0100',
             },
             {
+                'workoutActivityType': 'HKWorkoutActivityTypeRunning',
+                'duration': '29.78333333333333',
+                'durationUnit': 'min',
+                'totalDistance': '3.492727471566054',
+                'totalDistanceUnit': 'mi',
+                'totalEnergyBurned': '352',
+                'totalEnergyBurnedUnit': 'kcal',
+                'sourceName': 'Polar Beat',
+                'sourceVersion': '316',
+                'creationDate': '2018-10-03 13:00:00 +0100',
+                'startDate': '2018-10-03 11:00:00 +0100',
+                'endDate': '2018-10-03 13:00:00 +0100',
+            },
+            {
                 'type': 'HKQuantityTypeIdentifierHeartRate',
                 'sourceName': 'Nitesh\'s iPhone',
                 'sourceVersion': '13.0',
@@ -281,6 +295,24 @@ class TestReader(unittest.TestCase):
                 'HeartRate_average': '163',
                 'HeartRate_min': '129',
                 'HeartRate_max': '197',
+            },
+            {
+                'workoutActivityType': 'HKWorkoutActivityTypeRunning',
+                'duration': '29.78333333333333',
+                'durationUnit': 'min',
+                'totalDistance': '3.492727471566054',
+                'totalDistanceUnit': 'mi',
+                'totalEnergyBurned': '352',
+                'totalEnergyBurnedUnit': 'kcal',
+                'sourceName': 'Polar Beat',
+                'sourceVersion': '316',
+                'creationDate': '2018-10-03 13:00:00 +0100',
+                'startDate': '2018-10-03 11:00:00 +0100',
+                'endDate': '2018-10-03 13:00:00 +0100',
+                'HeartRate_unit': 'count/min',
+                'HeartRate_average': '150',
+                'HeartRate_min': '150',
+                'HeartRate_max': '150',
             }
         ]
 
@@ -290,8 +322,8 @@ class TestReader(unittest.TestCase):
         # arrange
         records = iter([])
         f = StringIO()
-        # act
 
+        # act
         reader.write_enriched_records_to_csv(records, f)
 
         # assert
@@ -317,15 +349,15 @@ class TestReader(unittest.TestCase):
             },
         ])
         f = StringIO()
-        # act
 
+        # act
         reader.write_enriched_records_to_csv(records, f)
 
         # assert
         expected = (
-            'workoutActivityType,duration,durationUnit,totalDistance,totalDistanceUnit,totalEnergyBurned,totalEnergyBurnedUnit,sourceName,sourceVersion,creationDate,startDate,endDate\r\n'
-            'HKWorkoutActivityTypeRunning,15.71666666666667,min,1.951105543625229,mi,,,,,,,\r\n'
-            'HKWorkoutActivityTypeRunning,29.78333333333333,min,3.492727471566054,mi,,,,,,,\r\n'
+            'workoutActivityType,duration,durationUnit,totalDistance,totalDistanceUnit,totalEnergyBurned,totalEnergyBurnedUnit,sourceName,sourceVersion,creationDate,startDate,endDate,HeartRate_unit,HeartRate_average,HeartRate_min,HeartRate_max\r\n'
+            'HKWorkoutActivityTypeRunning,15.71666666666667,min,1.951105543625229,mi,,,,,,,,,,,\r\n'
+            'HKWorkoutActivityTypeRunning,29.78333333333333,min,3.492727471566054,mi,,,,,,,,,,,\r\n'
         )
         self.assertEqual(expected, f.getvalue())
 
